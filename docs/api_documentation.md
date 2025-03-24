@@ -237,11 +237,3 @@ Delete a task.
     
 - `500 Internal Server Error`: Server error
     
-
-## Task Status Values
-
-- `pending`: Task is pending
-    
-- `in_progress`: Task is in progress
-    
-- `completed`: Task is completed
