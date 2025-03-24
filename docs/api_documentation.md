@@ -19,7 +19,6 @@ All endpoints return responses in the following JSON format:
 {
 "message": "Description of what happened",
 "data": {
-// Optional data object
 }
 }
 
