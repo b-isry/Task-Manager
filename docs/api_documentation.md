@@ -1,239 +1,213 @@
-# Task Manager API
+# Task Manager API Documentation
 
-## Overview
+## Prerequisites
 
-This API provides endpoints to manage tasks in a task management system. It supports basic CRUD operations (Create, Read, Update, Delete) for tasks.
+### MongoDB Setup
+1. Install MongoDB Community Edition from [MongoDB Download Center](https://www.mongodb.com/try/download/community)
+2. Start MongoDB service
+3. Create a database named `taskmanager` (will be created automatically on first connection)
 
-## Base URL
+### Environment Variables
+```bash
+MONGODB_URI=mongodb://localhost:27017  
+PORT=8080                             
+```
 
+## API Endpoints
+
+### Base URL
 ```
 http://localhost:8080
+```
 
- ```
+### 1. Get All Tasks
+```http
+GET /tasks
+```
 
-## Response Format
-
-All endpoints return responses in the following JSON format:
-
-``` json
+**Response (200 OK)**
+```json
 {
-"message": "Description of what happened",
-"data": {
+    "message": "Tasks retrieved successfully",
+    "data": [
+        {
+            "id": "507f1f77bcf86cd799439011",
+            "title": "Complete Project",
+            "description": "Finish the task manager API",
+            "due_date": "2024-03-25T15:00:00Z",
+            "status": "pending"
+        }
+    ]
 }
-}
+```
 
- ```
-
-## Endpoints
-
-### Health Check
-
-#### GET /ping
-
-Check if the API is running.
-
-**Response**
-
-``` json
-{
-"message": "pong"
-}
-
- ```
-
-### Tasks
-
-#### GET /tasks
-
-Retrieve all tasks.
-
-**Response**
-
-``` json
-{
-"message": "Tasks retrieved successfully",
-"data": [
-{
-"id": "1",
-"title": "Task 1",
-"description": "First task",
-"due_date": "2024-03-10T12:00:00Z",
-"status": "pending"
-}
-]
-}
-
- ```
-
-#### GET /tasks/:id
-
-Retrieve a specific task by ID.
+### 2. Get Task by ID
+```http
+GET /tasks/:id
+```
 
 **Parameters**
+- `id`: MongoDB ObjectID of the task
 
-- `id`: Task ID (string, in path)
-    
-
-**Success Response**
-
-``` json
+**Response (200 OK)**
+```json
 {
-"message": "Task retrieved successfully",
-"data": {
-"id": "1",
-"title": "Task 1",
-"description": "First task",
-"due_date": "2024-03-10T12:00:00Z",
-"status": "pending"
+    "message": "Task retrieved successfully",
+    "data": {
+        "id": "507f1f77bcf86cd799439011",
+        "title": "Complete Project",
+        "description": "Finish the task manager API",
+        "due_date": "2024-03-25T15:00:00Z",
+        "status": "pending"
+    }
 }
-}
+```
 
- ```
-
-**Error Response**
-
-``` json
-{
-"message": "Task not found"
-}
-
- ```
-
-#### POST /tasks
-
-Create a new task.
+### 3. Create Task
+```http
+POST /tasks
+Content-Type: application/json
+```
 
 **Request Body**
-
-``` json
+```json
 {
-"id": "4",
-"title": "New Task",
-"description": "Task description",
-"due_date": "2024-03-15T12:00:00Z",
-"status": "pending"
+    "title": "Complete Project",
+    "description": "Finish the task manager API",
+    "due_date": "2024-03-25T15:00:00Z",
+    "status": "pending"
 }
+```
 
- ```
-
-**Success Response**
-
-``` json
+**Response (201 Created)**
+```json
 {
-"message": "Task created successfully",
-"data": {
-"id": "4",
-"title": "New Task",
-"description": "Task description",
-"due_date": "2024-03-15T12:00:00Z",
-"status": "pending"
+    "message": "Task created successfully",
+    "data": {
+        "id": "507f1f77bcf86cd799439011",
+        "title": "Complete Project",
+        "description": "Finish the task manager API",
+        "due_date": "2024-03-25T15:00:00Z",
+        "status": "pending"
+    }
 }
-}
+```
 
- ```
-
-**Validation Error Response**
-
-``` json
-{
-"message": "Validation failed",
-"data": [
-{
-"field": "title",
-"message": "Title is required"
-}
-]
-}
-
- ```
-
-#### PUT /tasks/:id
-
-Update an existing task.
+### 4. Update Task
+```http
+PUT /tasks/:id
+Content-Type: application/json
+```
 
 **Parameters**
-
-- `id`: Task ID (string, in path)
-    
+- `id`: MongoDB ObjectID of the task
 
 **Request Body**
-
-``` json
+```json
 {
-"title": "Updated Task",
-"description": "Updated description",
-"status": "in_progress"
+    "title": "Updated Task Title",
+    "description": "Updated description",
+    "status": "in_progress"
 }
+```
 
- ```
-
-**Success Response**
-
-``` json
+**Response (200 OK)**
+```json
 {
-"message": "Task updated successfully"
+    "message": "Task updated successfully"
 }
+```
 
- ```
-
-**Error Responses**
-
-``` json
-{
-"message": "Task not found"
-}
-
- ```
-
-``` json
-{
-"message": "Validation failed",
-"data": [
-{
-"field": "status",
-"message": "Status must be one of: pending, in_progress, completed"
-}
-]
-}
-
- ```
-
-#### DELETE /tasks/:id
-
-Delete a task.
+### 5. Delete Task
+```http
+DELETE /tasks/:id
+```
 
 **Parameters**
+- `id`: MongoDB ObjectID of the task
 
-- `id`: Task ID (string, in path)
-    
-
-**Success Response**
-
-``` json
+**Response (200 OK)**
+```json
 {
-"message": "Task deleted successfully"
+    "message": "Task deleted successfully"
 }
+```
 
- ```
+## Error Responses
 
-**Error Response**
-
-``` json
+### 400 Bad Request
+```json
 {
-"message": "Task not found"
+    "message": "Validation failed",
+    "data": [
+        {
+            "field": "title",
+            "message": "Title is required"
+        }
+    ]
 }
+```
 
- ```
+### 404 Not Found
+```json
+{
+    "message": "Task not found"
+}
+```
 
-## Status Codes
+### 500 Internal Server Error
+```json
+{
+    "message": "Failed to retrieve tasks"
+}
+```
 
-- `200 OK`: Request successful
-    
-- `201 Created`: Resource created successfully
-    
-- `400 Bad Request`: Invalid request (validation error)
-    
-- `404 Not Found`: Resource not found
-    
-- `500 Internal Server Error`: Server error
-    
+## Data Models
+
+### Task
+```go
+type Task struct {
+    ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+    Title       string            `bson:"title" json:"title"`
+    Description string            `bson:"description" json:"description"`
+    DueDate     time.Time         `bson:"due_date" json:"due_date"`
+    Status      string            `bson:"status" json:"status"`
+}
+```
+
+### Status Values
+- `pending`
+- `in_progress`
+- `completed`
+
+## MongoDB Integration Details
+
+### Connection
+- The application automatically connects to MongoDB on startup
+- Default connection string: `mongodb://localhost:27017`
+- Database name: `taskmanager`
+- Collection name: `tasks`
+
+### Error Handling
+The API handles various MongoDB-related errors:
+- Connection errors
+- Invalid ObjectID format
+- Document not found
+- Database operation errors
+- Validation errors
+
+### Data Persistence
+- All tasks are stored in MongoDB
+- Task IDs are MongoDB ObjectIDs
+- Data persists between application restarts
+
+## Running the Application
+
+1. Start MongoDB service
+2. Set environment variables (optional)
+3. Run the application:
+```bash
+go run main.go
+```
+
+The server will start on port 8080 by default. 
