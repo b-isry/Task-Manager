@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Bisrat/task-manager/data"
+	"github.com/Bisrat/task-manager/errors"
 	"github.com/Bisrat/task-manager/models"
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,13 @@ func NewTaskController(taskService *data.TaskService) *TaskController {
 }
 
 func (c *TaskController) GetTasks(ctx *gin.Context) {
-	tasks := c.taskService.GetAllTasks()
+	tasks, err := c.taskService.GetAllTasks()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, models.APIResponse{
+			Message: "Failed to retrieve tasks",
+		})
+		return
+	}
 	ctx.JSON(http.StatusOK, models.APIResponse{
 		Message: "Tasks retrieved successfully",
 		Data:    tasks,
@@ -55,22 +62,22 @@ func (c *TaskController) CreateTask(ctx *gin.Context) {
 	if err := ctx.BindJSON(&newTask); err != nil {
 		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Message: "Invalid request payload",
-			Data: []models.ValidationError{
+			Data: []errors.ValidationError{
 				{Field: "body", Message: err.Error()},
 			},
 		})
 		return
 	}
 
-	var validationErrors []models.ValidationError
+	var validationErrors []errors.ValidationError
 	if newTask.Title == "" {
-		validationErrors = append(validationErrors, models.ValidationError{
+		validationErrors = append(validationErrors, errors.ValidationError{
 			Field:   "title",
 			Message: "Title is required",
 		})
 	}
 	if newTask.Status != "" && !isValidStatus(newTask.Status) {
-		validationErrors = append(validationErrors, models.ValidationError{
+		validationErrors = append(validationErrors, errors.ValidationError{
 			Field:   "status",
 			Message: "Status must be one of: pending, in_progress, completed",
 		})
@@ -114,7 +121,7 @@ func (c *TaskController) UpdateTask(ctx *gin.Context) {
 	if err := ctx.BindJSON(&updatedTask); err != nil {
 		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Message: "Invalid request payload",
-			Data: []models.ValidationError{
+			Data: []errors.ValidationError{
 				{Field: "body", Message: err.Error()},
 			},
 		})
@@ -124,7 +131,7 @@ func (c *TaskController) UpdateTask(ctx *gin.Context) {
 	if updatedTask.Status != "" && !isValidStatus(updatedTask.Status) {
 		ctx.JSON(http.StatusBadRequest, models.APIResponse{
 			Message: "Validation failed",
-			Data: []models.ValidationError{
+			Data: []errors.ValidationError{
 				{
 					Field:   "status",
 					Message: "Status must be one of: pending, in_progress, completed",
