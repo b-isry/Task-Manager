@@ -13,16 +13,118 @@ MONGODB_URI=mongodb://localhost:27017
 PORT=8080                             
 ```
 
-## API Endpoints
-
-### Base URL
+## Base URL
 ```
 http://localhost:8080
 ```
 
-### 1. Get All Tasks
+## Authentication
+
+### Register a New User
+```http
+POST /register
+Content-Type: application/json
+
+{
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123",
+    "role": "user"  // or "admin"
+}
+```
+
+**Response (201 Created)**
+```json
+{
+    "id": "user_id",
+    "name": "Test User",
+    "email": "test@example.com",
+    "role": "user",
+    "created_at": "2024-03-25T12:00:00Z",
+    "updated_at": "2024-03-25T12:00:00Z"
+}
+```
+
+### Login
+```http
+POST /login
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "password123"
+}
+```
+
+**Response (200 OK)**
+```json
+{
+    "token": "jwt_token",
+    "user": {
+        "id": "user_id",
+        "name": "Test User",
+        "email": "test@example.com",
+        "role": "user"
+    }
+}
+```
+
+## Protected Endpoints
+
+All protected endpoints require a JWT token in the Authorization header:
+```
+Authorization: Bearer <your_jwt_token>
+```
+
+### Users
+
+#### Get All Users (Admin Only)
+```http
+GET /users
+Authorization: Bearer <token>
+```
+
+**Response (200 OK)**
+```json
+[
+    {
+        "id": "user_id",
+        "name": "Test User",
+        "email": "test@example.com",
+        "role": "user",
+        "created_at": "2024-03-25T12:00:00Z",
+        "updated_at": "2024-03-25T12:00:00Z"
+    }
+]
+```
+
+### Tasks
+
+#### Create Task
+```http
+POST /tasks
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+    "title": "Complete Project",
+    "description": "Finish the task manager project",
+    "due_date": "2024-03-30T00:00:00Z",
+    "status": "pending"
+}
+```
+
+**Response (201 Created)**
+```json
+{
+    "message": "Task created successfully"
+}
+```
+
+#### Get All Tasks
 ```http
 GET /tasks
+Authorization: Bearer <token>
 ```
 
 **Response (200 OK)**
@@ -31,79 +133,42 @@ GET /tasks
     "message": "Tasks retrieved successfully",
     "data": [
         {
-            "id": "507f1f77bcf86cd799439011",
+            "id": "task_id",
             "title": "Complete Project",
-            "description": "Finish the task manager API",
-            "due_date": "2024-03-25T15:00:00Z",
+            "description": "Finish the task manager project",
+            "due_date": "2024-03-30T00:00:00Z",
             "status": "pending"
         }
     ]
 }
 ```
 
-### 2. Get Task by ID
+#### Get Task by ID
 ```http
 GET /tasks/:id
+Authorization: Bearer <token>
 ```
-
-**Parameters**
-- `id`: MongoDB ObjectID of the task
 
 **Response (200 OK)**
 ```json
 {
     "message": "Task retrieved successfully",
     "data": {
-        "id": "507f1f77bcf86cd799439011",
+        "id": "task_id",
         "title": "Complete Project",
-        "description": "Finish the task manager API",
-        "due_date": "2024-03-25T15:00:00Z",
+        "description": "Finish the task manager project",
+        "due_date": "2024-03-30T00:00:00Z",
         "status": "pending"
     }
 }
 ```
 
-### 3. Create Task
-```http
-POST /tasks
-Content-Type: application/json
-```
-
-**Request Body**
-```json
-{
-    "title": "Complete Project",
-    "description": "Finish the task manager API",
-    "due_date": "2024-03-25T15:00:00Z",
-    "status": "pending"
-}
-```
-
-**Response (201 Created)**
-```json
-{
-    "message": "Task created successfully",
-    "data": {
-        "id": "507f1f77bcf86cd799439011",
-        "title": "Complete Project",
-        "description": "Finish the task manager API",
-        "due_date": "2024-03-25T15:00:00Z",
-        "status": "pending"
-    }
-}
-```
-
-### 4. Update Task
+#### Update Task
 ```http
 PUT /tasks/:id
+Authorization: Bearer <token>
 Content-Type: application/json
-```
 
-**Parameters**
-- `id`: MongoDB ObjectID of the task
-
-**Request Body**
-```json
 {
     "title": "Updated Task Title",
     "description": "Updated description",
@@ -118,13 +183,11 @@ Content-Type: application/json
 }
 ```
 
-### 5. Delete Task
+#### Delete Task
 ```http
 DELETE /tasks/:id
+Authorization: Bearer <token>
 ```
-
-**Parameters**
-- `id`: MongoDB ObjectID of the task
 
 **Response (200 OK)**
 ```json
@@ -138,28 +201,84 @@ DELETE /tasks/:id
 ### 400 Bad Request
 ```json
 {
-    "message": "Validation failed",
-    "data": [
-        {
-            "field": "title",
-            "message": "Title is required"
-        }
-    ]
+    "error": "Validation error message"
+}
+```
+
+### 401 Unauthorized
+```json
+{
+    "error": "Authorization header is required"
+}
+```
+or
+```json
+{
+    "error": "Invalid token"
+}
+```
+
+### 403 Forbidden
+```json
+{
+    "error": "Insufficient permissions"
 }
 ```
 
 ### 404 Not Found
 ```json
 {
-    "message": "Task not found"
+    "error": "Resource not found"
 }
 ```
 
 ### 500 Internal Server Error
 ```json
 {
-    "message": "Failed to retrieve tasks"
+    "error": "Internal server error message"
 }
+```
+
+## Environment Variables
+
+The following environment variables are required:
+
+- `MONGODB_URI`: MongoDB connection string (default: "mongodb://localhost:27017")
+- `JWT_SECRET`: Secret key for JWT token generation (required for production)
+
+## Testing the API
+
+1. Start the server:
+```bash
+go run main.go
+```
+
+2. Register a new user:
+```bash
+curl -X POST http://localhost:8080/register \
+-H "Content-Type: application/json" \
+-d '{
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123",
+    "role": "user"
+}'
+```
+
+3. Login to get a token:
+```bash
+curl -X POST http://localhost:8080/login \
+-H "Content-Type: application/json" \
+-d '{
+    "email": "test@example.com",
+    "password": "password123"
+}'
+```
+
+4. Use the token for protected endpoints:
+```bash
+curl -X GET http://localhost:8080/tasks \
+-H "Authorization: Bearer <your_token>"
 ```
 
 ## Data Models

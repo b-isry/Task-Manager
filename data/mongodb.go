@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	client     *mongo.Client
-	collection *mongo.Collection
+	client *mongo.Client
+	db     *mongo.Database
 )
 
 func InitDB(uri string) error {
@@ -30,13 +30,13 @@ func InitDB(uri string) error {
 		return &errors.ConnectionError{Err: err}
 	}
 
-	collection = client.Database("taskmanager").Collection("tasks")
+	db = client.Database("taskmanager")
 	log.Println("Connected to MongoDB!")
 	return nil
 }
 
-func GetCollection() *mongo.Collection {
-	return collection
+func GetCollection(collectionName string) *mongo.Collection {
+	return db.Collection(collectionName)
 }
 
 func CloseDB() {

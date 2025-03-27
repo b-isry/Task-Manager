@@ -17,7 +17,7 @@ type TaskService struct {
 
 func NewTaskService() *TaskService {
 	return &TaskService{
-		collection: GetCollection(),
+		collection: GetCollection(models.TaskCollection),
 	}
 }
 
